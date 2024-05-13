@@ -55,11 +55,11 @@ blueprint:
 
     devices_to_control:
       name: Entidades a Controlar
-      description: Selecione as entidades específicas que serão controladas. Selecione cada switch individualmente se necessário.
+      description: Selecione as entidades específicas que serão controladas, como cada interruptor individual em um painel.
       selector:
         target:
           entity:
-            domain: switch  # Ajuste conforme necessário para outros tipos de entidade, se aplicável.
+            domain: switch  # Adapte conforme necessário para outros domínios, como light, etc.
 
 trigger:
   - platform: device
