@@ -1,0 +1,45 @@
+blueprint:
+  name: Ativação de dispositivo por movimento
+  description: Liga um dispositivo quando um movimento é detectado por uma câmera em um horário específico.
+  domain: automation
+  input:
+    motion_sensor:
+      name: Sensor de movimento
+      description: Selecione o sensor de movimento da câmera.
+      selector:
+        entity:
+          domain: binary_sensor
+          device_class: motion
+    target_device:
+      name: Dispositivo a ser ativado
+      description: Selecione o dispositivo que será ligado ao detectar movimento.
+      selector:
+        entity:
+          domain: switch
+    start_time:
+      name: Horário de início
+      description: Defina o horário de início para ativar o dispositivo.
+      selector:
+        time:
+    end_time:
+      name: Horário de fim
+      description: Defina o horário de fim para desativar a ativação do dispositivo.
+      selector:
+        time:
+
+trigger:
+  platform: state
+  entity_id: !input 'motion_sensor'
+  from: 'off'
+  to: 'on'
+
+condition:
+  - condition: time
+    after: !input 'start_time'
+    before: !input 'end_time'
+
+action:
+  - service: switch.turn_on
+    target:
+      entity_id: !input 'target_device'
+
