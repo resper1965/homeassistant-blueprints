@@ -5,13 +5,13 @@ blueprint:
   input:
     mmwave_sensor:
       name: Sensor mmWave
-      description: Selecione o sensor mmWave para monitorar mudanças.
+      description: Selecione a entidade do sensor mmWave para monitorar mudanças.
       selector:
         entity:
           domain: sensor
     luminance_threshold:
       name: Limiar de Iluminância
-      description: Valor de iluminância para acionar os dispositivos.
+      description: Valor de iluminância para acionar dispositivos.
       default: 100
       selector:
         number:
@@ -20,7 +20,7 @@ blueprint:
           unit_of_measurement: lux
     presence_state:
       name: Estado de Presença
-      description: Estado de presença para acionar os dispositivos (por exemplo, 'detected').
+      description: Estado de presença para acionar dispositivos (por exemplo, 'detected').
       default: 'detected'
       selector:
         text:
@@ -34,8 +34,8 @@ blueprint:
           max: 10
           unit_of_measurement: meters
     devices_to_control:
-      name: Dispositivos a Controlar
-      description: Selecione os dispositivos que serão controlados.
+      name: Entidades a Controlar
+      description: Selecione as entidades que serão controladas.
       selector:
         target:
 
@@ -56,4 +56,3 @@ trigger:
 action:
   - service: homeassistant.turn_on
     target: !input 'devices_to_control'
-
