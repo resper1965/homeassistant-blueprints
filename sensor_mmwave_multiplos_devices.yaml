@@ -1,58 +1,116 @@
 blueprint:
   name: Controle Flexível de Dispositivos com Sensor mmWave
-  description: Aciona dispositivos com base na iluminância, presença e distância detectadas por um sensor mmWave.
+  description: Aciona dispositivos com base na iluminância, presença e distância detectadas por um dispositivo de sensor. Permite ativar ou desativar dispositivos com base em condições configuradas.
   domain: automation
   input:
-    mmwave_sensor:
-      name: Sensor mmWave
-      description: Selecione a entidade do sensor mmWave para monitorar mudanças.
+    mmwave_sensor_device:
+      name: Dispositivo Sensor
+      description: Selecione o dispositivo sensor para monitorar mudanças.
       selector:
-        entity:
-          domain: sensor
+        device: {}
+
     luminance_threshold:
-      name: Limiar de Iluminância
-      description: Valor de iluminância para acionar dispositivos.
+      name: Limiar de Iluminância para Ativar
+      description: Valor de iluminância acima do qual os dispositivos serão ativados.
       default: 100
       selector:
         number:
           min: 0
           max: 1000
           unit_of_measurement: lux
+
+    luminance_threshold_off:
+      name: Limiar de Iluminância para Desativar
+      description: Valor de iluminância abaixo do qual os dispositivos serão desativados.
+      default: 50
+      selector:
+        number:
+          min: 0
+          max: 1000
+          unit_of_measurement: lux
+
     presence_state:
-      name: Estado de Presença
-      description: Estado de presença para acionar dispositivos (por exemplo, 'detected').
+      name: Estado de Presença para Ativar
+      description: Estado de presença para ativar dispositivos (por exemplo, 'detected').
       default: 'detected'
       selector:
         text:
+
+    presence_state_off:
+      name: Estado de Presença para Desativar
+      description: Estado de presença para desativar dispositivos (por exemplo, 'not_detected').
+      default: 'not_detected'
+      selector:
+        text:
+
     distance_threshold:
-      name: Limiar de Distância
-      description: Valor de distância para acionar dispositivos.
+      name: Limiar de Distância para Ativar
+      description: Valor de distância abaixo do qual os dispositivos serão ativados.
       default: 2
       selector:
         number:
           min: 0
           max: 10
           unit_of_measurement: meters
+
     devices_to_control:
       name: Entidades a Controlar
-      description: Selecione as entidades que serão controladas.
+      description: Selecione as entidades específicas que serão controladas. Selecione cada switch individualmente se necessário.
       selector:
         target:
+          entity:
+            domain: switch  # Ajuste conforme necessário para outros tipos de entidade, se aplicável.
 
 trigger:
-  - platform: numeric_state
-    entity_id: !input 'mmwave_sensor'
+  - platform: device
+    device_id: !input 'mmwave_sensor_device'
+    type: value_changed
     attribute: illuminance
     above: !input 'luminance_threshold'
-  - platform: state
-    entity_id: !input 'mmwave_sensor'
+  - platform: device
+    device_id: !input 'mmwave_sensor_device'
+    type: value_changed
+    attribute: illuminance
+    below: !input 'luminance_threshold_off'
+  - platform: device
+    device_id: !input 'mmwave_sensor_device'
+    type: value_changed
     attribute: presence
     to: !input 'presence_state'
-  - platform: numeric_state
-    entity_id: !input 'mmwave_sensor'
+  - platform: device
+    device_id: !input 'mmwave_sensor_device'
+    type: value_changed
+    attribute: presence
+    to: !input 'presence_state_off'
+  - platform: device
+    device_id: !input 'mmwave_sensor_device'
+    type: value_changed
     attribute: distance
     below: !input 'distance_threshold'
 
 action:
-  - service: homeassistant.turn_on
-    target: !input 'devices_to_control'
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: 'illuminance_on'
+        sequence:
+          - service: homeassistant.turn_on
+            target: !input 'devices_to_control'
+      - conditions:
+          - condition: trigger
+            id: 'illuminance_off'
+        sequence:
+          - service: homeassistant.turn_off
+            target: !input 'devices_to_control'
+      - conditions:
+          - condition: trigger
+            id: 'presence_on'
+        sequence:
+          - service: homeassistant.turn_on
+            target: !input 'devices_to_control'
+      - conditions:
+          - condition: trigger
+            id: 'presence_off'
+        sequence:
+          - service: homeassistant.turn_off
+            target: !input 'devices_to_control'
