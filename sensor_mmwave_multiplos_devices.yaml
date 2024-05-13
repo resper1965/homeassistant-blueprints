@@ -1,7 +1,7 @@
 blueprint:
-  name: Controle Flexível de Dispositivos com Sensor mmWave
+  name: Controle Sensor mmWave by Esper
   description: Aciona dispositivos com base na iluminância, presença e distância detectadas por um dispositivo de sensor. Permite ativar ou desativar dispositivos com base em condições configuradas.
-  domain: automation
+  domain: automation  # Este é o domínio correto para um blueprint de automação.
   input:
     mmwave_sensor_device:
       name: Dispositivo Sensor
@@ -59,7 +59,7 @@ blueprint:
       selector:
         target:
           entity:
-            domain: switch  # Adapte conforme necessário para outros domínios, como light, etc.
+            domain: switch  # Ajuste conforme necessário para outros domínios, como light, etc.
 
 trigger:
   - platform: device
