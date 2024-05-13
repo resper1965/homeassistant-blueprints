@@ -1,0 +1,73 @@
+blueprint:
+  name: Acionamento de Dispositivos com Sensor mmWave
+  description: Aciona múltiplos dispositivos baseado em iluminância, presença e distância detectadas por um sensor mmWave.
+  domain: automation
+  input:
+    mmwave_sensor:
+      name: Sensor mmWave
+      description: Selecione o sensor mmWave.
+      selector:
+        entity:
+          domain: sensor
+    luminance_threshold:
+      name: Limiar de Iluminância
+      description: Define o valor de iluminância para acionar os dispositivos.
+      default: 100
+      selector:
+        number:
+          min: 0
+          max: 1000
+          unit_of_measurement: lux
+    presence_device:
+      name: Dispositivo de Presença
+      description: Dispositivo a ser acionado quando presença for detectada.
+      selector:
+        entity:
+          domain: switch
+    distance_device:
+      name: Dispositivo de Distância
+      description: Dispositivo a ser acionado com base na distância medida.
+      selector:
+        entity:
+          domain: light
+
+trigger:
+  - platform: state
+    entity_id: !input 'mmwave_sensor'
+    attribute: illuminance
+    above: !input 'luminance_threshold'
+  - platform: state
+    entity_id: !input 'mmwave_sensor'
+    attribute: presence
+    to: 'detected'
+  - platform: state
+    entity_id: !input 'mmwave_sensor'
+    attribute: distance
+    below: 2 # supondo que a distância é medida em metros
+
+action:
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: 'illuminance'
+        sequence:
+          - service: switch.turn_on
+            target:
+              entity_id: !input 'presence_device'
+      - conditions:
+          - condition: trigger
+            id: 'presence'
+        sequence:
+          - service: light.turn_on
+            target:
+              entity_id: !input 'distance_device'
+      - conditions:
+          - condition: trigger
+            id: 'distance'
+        sequence:
+          - service: light.turn_on
+            target:
+              entity_id: !input 'distance_device'
+
+author: Ricardo Esper
+created_on: 2024-05-13
