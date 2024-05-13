@@ -1,13 +1,14 @@
 blueprint:
-  name: Controle Sensor mmwave by Esper
-  description: Aciona switches com base na presença e iluminância detectadas por um dispositivo sensor. Liga quando a luminosidade é inferior a 100 lx e há presença; desliga quando não há presença.
+  name: Sensor MMWAVE by Esper
+  description: Aciona switches com base na presença e iluminância detectadas por um sensor. Liga quando a luminosidade é inferior a 100 lx e há presença; desliga quando não há presença. Garante que os atributos necessários estão presentes.
   domain: automation
   input:
-    sensor_device:
-      name: Dispositivo Sensor
-      description: Selecione o dispositivo sensor que monitora presença e iluminância.
+    sensor_entity:
+      name: Entidade do Sensor
+      description: Selecione a entidade do sensor que monitora presença e iluminância.
       selector:
-        device: {}
+        entity:
+          domain: sensor
 
     devices_to_control:
       name: Switches a Controlar
@@ -19,27 +20,32 @@ blueprint:
 
 trigger:
   - platform: state
-    entity_id: !input 'sensor_device'
+    entity_id: !input 'sensor_entity'
     attribute: presence
     to: 'detected'
   - platform: state
-    entity_id: !input 'sensor_device'
+    entity_id: !input 'sensor_entity'
     attribute: presence
     to: 'not_detected'
   - platform: numeric_state
-    entity_id: !input 'sensor_device'
+    entity_id: !input 'sensor_entity'
     attribute: illuminance
     below: 100
 
 condition:
+  - condition: template
+    value_template: >
+      {% set sensor = states.sensor | selectattr('entity_id', 'eq', states[trigger.entity_id].entity_id) | first %}
+      {{ 'presence' in sensor.attributes and 'illuminance' in sensor.attributes }}
+
   - condition: and
     conditions:
       - condition: state
-        entity_id: !input 'sensor_device'
+        entity_id: !input 'sensor_entity'
         attribute: presence
         state: 'detected'
       - condition: numeric_state
-        entity_id: !input 'sensor_device'
+        entity_id: !input 'sensor_entity'
         attribute: illuminance
         below: 100
 
@@ -47,7 +53,7 @@ action:
   - choose:
       - conditions:
           - condition: state
-            entity_id: !input 'sensor_device'
+            entity_id: !input 'sensor_entity'
             attribute: presence
             state: 'detected'
         sequence:
@@ -55,7 +61,7 @@ action:
             target: !input 'devices_to_control'
       - conditions:
           - condition: state
-            entity_id: !input 'sensor_device'
+            entity_id: !input 'sensor_entity'
             attribute: presence
             state: 'not_detected'
         sequence:
