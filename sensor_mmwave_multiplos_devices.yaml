@@ -1,15 +1,14 @@
 blueprint:
   name: Sensor Automation by Esper
-  description: Aciona dispositivos quando há detecção de presença após o pôr do sol e até uma hora após o nascer do sol, e os desliga se não houver presença por mais de 30 segundos.
+  description: Aciona dispositivos com base na detecção de presença humana pelo sensor. Funciona após o pôr do sol e até uma hora após o nascer do sol, e desliga dispositivos se não houver detecção por mais de 30 segundos. Certifique-se de que seu sensor está configurado para fornecer o estado de presença de forma confiável.
   domain: automation
   input:
     presence_sensor:
-      name: Sensor de presença
-      description: Escolha o sensor de presença
+      name: Sensor de presença humana
+      description: Escolha o sensor de presença humana. Certifique-se de que o sensor está calibrado corretamente para refletir a presença com precisão.
       selector:
         entity:
           domain: binary_sensor
-          device_class: motion
     controlled_entities:
       name: Entidades controladas
       description: Selecione os dispositivos ou entidades a serem controlados
