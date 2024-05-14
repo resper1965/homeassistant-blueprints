@@ -1,69 +1,69 @@
 blueprint:
-  name: Sensor MMWAVE by Esper
-  description: Aciona switches com base na presença e iluminância detectadas por um sensor. Liga quando a luminosidade é inferior a 100 lx e há presença; desliga quando não há presença. Garante que os atributos necessários estão presentes.
+  name: Sensor Automation by Esper
+  description: Aciona dispositivos quando há detecção de presença após o pôr do sol e até uma hora após o nascer do sol, e os desliga se não houver presença por mais de 30 segundos.
   domain: automation
   input:
-    sensor_entity:
-      name: Entidade do Sensor
-      description: Selecione a entidade do sensor que monitora presença e iluminância.
+    presence_sensor:
+      name: Sensor de presença
+      description: Escolha o sensor de presença
       selector:
         entity:
-          domain: sensor
-
-    devices_to_control:
-      name: Switches a Controlar
-      description: Selecione os switches que serão controlados por esta automação.
+          domain: binary_sensor
+          device_class: motion
+    controlled_entities:
+      name: Entidades controladas
+      description: Selecione os dispositivos ou entidades a serem controlados
       selector:
         target:
           entity:
-            domain: switch
+            domain: 
+              - switch
+              - light
+              - media_player
 
 trigger:
   - platform: state
-    entity_id: !input 'sensor_entity'
-    attribute: presence
-    to: 'detected'
+    entity_id: !input presence_sensor
+    to: 'on'
   - platform: state
-    entity_id: !input 'sensor_entity'
-    attribute: presence
-    to: 'not_detected'
-  - platform: numeric_state
-    entity_id: !input 'sensor_entity'
-    attribute: illuminance
-    below: 100
+    entity_id: !input presence_sensor
+    to: 'off'
+    for: "00:00:30"
 
 condition:
-  - condition: template
-    value_template: >
-      {% set sensor = states.sensor | selectattr('entity_id', 'eq', states[trigger.entity_id].entity_id) | first %}
-      {{ 'presence' in sensor.attributes and 'illuminance' in sensor.attributes }}
-
-  - condition: and
+  - condition: or
     conditions:
+      - condition: and
+        conditions:
+          - condition: state
+            entity_id: !input presence_sensor
+            state: 'on'
+          - condition: or
+            conditions:
+              - condition: sun
+                after: sunset
+              - condition: sun
+                before: sunrise
+                before_offset: "01:00:00"
       - condition: state
-        entity_id: !input 'sensor_entity'
-        attribute: presence
-        state: 'detected'
-      - condition: numeric_state
-        entity_id: !input 'sensor_entity'
-        attribute: illuminance
-        below: 100
+        entity_id: !input presence_sensor
+        state: 'off'
 
 action:
   - choose:
       - conditions:
           - condition: state
-            entity_id: !input 'sensor_entity'
-            attribute: presence
-            state: 'detected'
+            entity_id: !input presence_sensor
+            state: 'on'
         sequence:
           - service: homeassistant.turn_on
-            target: !input 'devices_to_control'
+            target: !input controlled_entities
       - conditions:
           - condition: state
-            entity_id: !input 'sensor_entity'
-            attribute: presence
-            state: 'not_detected'
+            entity_id: !input presence_sensor
+            state: 'off'
         sequence:
           - service: homeassistant.turn_off
-            target: !input 'devices_to_control'
+            target: !input controlled_entities
+
+mode: restart
