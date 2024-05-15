@@ -9,10 +9,10 @@ blueprint:
         entity:
           domain: binary_sensor
     light_entity:
-      name: Luz
+      name: Entidade
       selector:
         entity:
-          domain: light
+          domain: switch
     sensitivity_value_presence:
       name: Sensibilidade do Sensor (Presença)
       description: Valor da sensibilidade do sensor mmWave ao detectar presença.
