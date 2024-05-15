@@ -1,6 +1,6 @@
 blueprint:
-  name: MMWAVE sensibilidade by Esper
-  description: Automação para ligar e desligar luzes com base na presença detectada pelo sensor mmWave, incluindo mudança de sensibilidade.
+  name: MMWAVE Corredor Quartos
+  description: Automação para ligar e desligar luzes no corredor dos quartos com base na presença detectada pelo sensor mmWave.
   domain: automation
   input:
     mmwave_sensor:
@@ -9,38 +9,10 @@ blueprint:
         entity:
           domain: binary_sensor
     light_entity:
-      name: Entidade
+      name: Luz
       selector:
         entity:
-          domain: switch
-    sensitivity_value_presence:
-      name: Sensibilidade do Sensor (Presença)
-      description: Valor da sensibilidade do sensor mmWave ao detectar presença.
-      default: 4
-      selector:
-        number:
-          min: 1
-          max: 10
-    sensitivity_value_absence:
-      name: Sensibilidade do Sensor (Ausência)
-      description: Valor da sensibilidade do sensor mmWave ao detectar ausência.
-      default: 0
-      selector:
-        number:
-          min: 0
-          max: 10
-    skip_presence_boolean:
-      name: Skip Presence Boolean
-      description: Booleano usado para evitar ações conflitantes ao detectar presença.
-      selector:
-        entity:
-          domain: input_boolean
-    skip_absence_boolean:
-      name: Skip Absence Boolean
-      description: Booleano usado para evitar ações conflitantes ao detectar ausência.
-      selector:
-        entity:
-          domain: input_boolean
+          domain: light
 trigger:
   - platform: state
     entity_id: !input mmwave_sensor
@@ -51,41 +23,15 @@ action:
             entity_id: !input mmwave_sensor
             state: "on"
         sequence:
-          - service: input_boolean.turn_on
-            target:
-              entity_id: !input skip_presence_boolean
           - service: light.turn_on
             target:
               entity_id: !input light_entity
-          - service: number.set_value
-            target:
-              entity_id: !input mmwave_sensor
-            data:
-              value: !input sensitivity_value_presence
-          - delay:
-              seconds: 5
-          - service: input_boolean.turn_off
-            target:
-              entity_id: !input skip_presence_boolean
       - conditions:
           - condition: state
             entity_id: !input mmwave_sensor
             state: "off"
         sequence:
-          - service: input_boolean.turn_on
-            target:
-              entity_id: !input skip_absence_boolean
-          - delay:
-              seconds: 5
-          - service: number.set_value
-            target:
-              entity_id: !input mmwave_sensor
-            data:
-              value: !input sensitivity_value_absence
           - service: light.turn_off
             target:
               entity_id: !input light_entity
-          - service: input_boolean.turn_off
-            target:
-              entity_id: !input skip_absence_boolean
 mode: single
