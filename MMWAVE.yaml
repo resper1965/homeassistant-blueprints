@@ -1,6 +1,6 @@
 blueprint:
   name: MMWAVE 
-  description: Automação para ligar e desligar múltiplos dispositivos no corredor dos quartos com base na presença detectada pelo sensor mmWave, com restrição de tempo.
+  description: Automação para ligar e desligar múltiplos dispositivos com base na presença detectada pelo sensor mmWave, com restrição de tempo.
   domain: automation
   input:
     mmwave_sensor:
