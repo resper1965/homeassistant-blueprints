@@ -1,5 +1,5 @@
 blueprint:
-  name: MMWAVE Corredor Quartos
+  name: MMWAVE 
   description: Automação para ligar e desligar múltiplos dispositivos no corredor dos quartos com base na presença detectada pelo sensor mmWave, com restrição de tempo.
   domain: automation
   input:
