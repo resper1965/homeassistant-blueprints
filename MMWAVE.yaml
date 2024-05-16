@@ -1,5 +1,5 @@
 blueprint:
-  name: MMWAVE 
+  name: MMWAVE
   description: Automação para ligar e desligar múltiplos dispositivos com base na presença detectada pelo sensor mmWave, com restrição de tempo.
   domain: automation
   input:
@@ -26,28 +26,37 @@ blueprint:
         time:
 trigger:
   - platform: state
-    entity_id: !input mmwave_sensor
+    entity_id: !input 'mmwave_sensor'
 condition:
   - condition: time
-    after: !input start_time
-    before: !input end_time
+    after: !input 'start_time'
+    before: !input 'end_time'
 action:
   - choose:
       - conditions:
           - condition: state
-            entity_id: !input mmwave_sensor
-            state: "on"
+            entity_id: !input 'mmwave_sensor'
+            state: 'on'
         sequence:
-          - delay: "00:00:01"  # Atraso de 1 segundo
+          - service: logbook.log
+            data:
+              name: "MMWAVE Automação"
+              message: "Sensor mmWave detectou presença. Ligando switches."
+              entity_id: !input 'mmwave_sensor'
           - service: switch.turn_on
-            target: !input switch_entities
+            target: !input 'switch_entities'
       - conditions:
           - condition: state
-            entity_id: !input mmwave_sensor
-            state: "off"
+            entity_id: !input 'mmwave_sensor'
+            state: 'off'
         sequence:
-          - delay: "00:00:01"  # Atraso de 1 segundo
+          - service: logbook.log
+            data:
+              name: "MMWAVE Automação"
+              message: "Sensor mmWave não detectou presença. Desligando switches."
+              entity_id: !input 'mmwave_sensor'
           - service: switch.turn_off
-            target: !input switch_entities
-mode: restart
+            target: !input 'switch_entities'
+mode: single
+
 
