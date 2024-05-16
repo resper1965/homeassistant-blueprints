@@ -1,56 +1,27 @@
 blueprint:
-  name: Sincroniza 4 Dispositovos by Esper
-  description: Bind four entities together to act in unison (selected entites must all support the same state values)
+  name: Sincronizar Multiplos dispositivos by Esper
+  description: Bind multiple entities together to act in unison (selected entities must all support the same state values)
   domain: automation
   input:
-    switch_1:
-      name: Entity 1
+    switches:
+      name: Dispositivos
+      description: Lista de dispositivos para sincronizar
       selector:
-        entity:
-          #domain: switch          
-    switch_2:
-      name: Entity 2
-      selector:
-        entity:
-          #domain: switch
-    switch_3:
-      name: Entity 3
-      selector:
-        entity:
-          #domain: switch
-    switch_4:
-      name: Entity 4
-      selector:
-        entity:
-          #domain: switch
+        target:
+          entity:
+            domain: switch
 mode: restart
 max_exceeded: silent
-variables:
-  switch_1: !input 'switch_1'
-  switch_2: !input 'switch_2'
-  switch_3: !input 'switch_3'
-  switch_4: !input 'switch_4'
 trigger:
   - platform: state
-    entity_id: !input 'switch_1'
-  - platform: state
-    entity_id: !input 'switch_2'
-  - platform: state
-    entity_id: !input 'switch_3'  
-  - platform: state
-    entity_id: !input 'switch_4'  
+    entity_id: !input 'switches'
+variables:
+  switches: !input 'switches'
 action:
-- entity_id:
-  - '{% if trigger.from_state.entity_id == switch_1 %} {{ switch_2 }}'
-  - '{% if trigger.from_state.entity_id == switch_1 %} {{ switch_3 }}'
-  - '{% if trigger.from_state.entity_id == switch_1 %} {{ switch_4 }}'
-  - '{% if trigger.from_state.entity_id == switch_2 %} {{ switch_1 }}'
-  - '{% if trigger.from_state.entity_id == switch_2 %} {{ switch_3 }}'
-  - '{% if trigger.from_state.entity_id == switch_2 %} {{ switch_4 }}'
-  - '{% if trigger.from_state.entity_id == switch_3 %} {{ switch_1 }}'
-  - '{% if trigger.from_state.entity_id == switch_3 %} {{ switch_2 }}'
-  - '{% if trigger.from_state.entity_id == switch_3 %} {{ switch_4 }}'
-  - '{% if trigger.from_state.entity_id == switch_4 %} {{ switch_1 }}'
-  - '{% if trigger.from_state.entity_id == switch_4 %} {{ switch_2 }}'
-  - '{% if trigger.from_state.entity_id == switch_4 %} {{ switch_3 }}'
-  service:  homeassistant.turn_{{ trigger.to_state.state }}
+  - service: "homeassistant.turn_{{ trigger.to_state.state }}"
+    target:
+      entity_id: >
+        {% set trigger_entity = trigger.entity_id %}
+        {% set entities = expand(switches) | map(attribute='entity_id') | list %}
+        {{ entities | reject('equalto', trigger_entity) | list }}
+
