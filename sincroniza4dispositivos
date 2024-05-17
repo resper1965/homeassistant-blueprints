@@ -7,11 +7,9 @@ blueprint:
       name: Dispositivos
       description: Lista de dispositivos para sincronizar (de 2 a 5 dispositivos)
       selector:
-        target:
-          entity:
-            domain: switch
-            multiple: true
-            limit: 5
+        entity:
+          domain: switch
+          multiple: true
 trigger:
   - platform: state
     entity_id: !input 'switches'
