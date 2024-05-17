@@ -1,62 +1,56 @@
 blueprint:
-  name: MMWAVE
-  description: Automação para ligar e desligar múltiplos dispositivos com base na presença detectada pelo sensor mmWave, com restrição de tempo.
+  name: Ligar e desligar switch com sensor mmWave e iluminação
+  description: Liga o switch quando o sensor mmWave detecta presença e a iluminação é inferior a 100 lux. Desliga o switch quando não há presença.
   domain: automation
   input:
-    mmwave_sensor:
-      name: Sensor mmWave
+    sensor_presence:
+      name: Sensor mmWave de Presença
+      description: O sensor mmWave que detecta presença.
       selector:
         entity:
           domain: binary_sensor
-    switch_entities:
-      name: Dispositivos de Switch
+    sensor_illuminance:
+      name: Sensor de Iluminação
+      description: O sensor que mede o nível de iluminação em lux.
       selector:
-        target:
-          entity:
-            domain: switch
-    start_time:
-      name: Hora de Início
-      description: Hora do dia em que a automação começa a funcionar.
+        entity:
+          domain: sensor
+    switch:
+      name: Switch
+      description: O switch que será controlado com base na presença e na iluminação.
       selector:
-        time:
-    end_time:
-      name: Hora de Término
-      description: Hora do dia em que a automação para de funcionar.
-      selector:
-        time:
+        entity:
+          domain: switch
+
 trigger:
   - platform: state
-    entity_id: !input 'mmwave_sensor'
+    entity_id: !input sensor_presence
+    to: 'on'
+  - platform: state
+    entity_id: !input sensor_presence
+    to: 'off'
+
 condition:
-  - condition: time
-    after: !input 'start_time'
-    before: !input 'end_time'
+  - condition: template
+    value_template: "{{ states('!input sensor_illuminance') | int < 100 }}"
+
 action:
   - choose:
       - conditions:
           - condition: state
-            entity_id: !input 'mmwave_sensor'
+            entity_id: !input sensor_presence
             state: 'on'
+          - condition: template
+            value_template: "{{ states('!input sensor_illuminance') | int < 100 }}"
         sequence:
-          - service: logbook.log
-            data:
-              name: "MMWAVE Automação"
-              message: "Sensor mmWave detectou presença. Ligando switches."
-              entity_id: !input 'mmwave_sensor'
           - service: switch.turn_on
-            target: !input 'switch_entities'
+            target:
+              entity_id: !input switch
       - conditions:
           - condition: state
-            entity_id: !input 'mmwave_sensor'
+            entity_id: !input sensor_presence
             state: 'off'
         sequence:
-          - service: logbook.log
-            data:
-              name: "MMWAVE Automação"
-              message: "Sensor mmWave não detectou presença. Desligando switches."
-              entity_id: !input 'mmwave_sensor'
           - service: switch.turn_off
-            target: !input 'switch_entities'
-mode: single
-
-
+            target:
+              entity_id: !input switch
