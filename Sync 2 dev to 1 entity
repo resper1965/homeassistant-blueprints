@@ -25,17 +25,21 @@ variables:
 
 trigger:
   - platform: state
-    entity_id: !input main_switch
+    entity_id:
+      - !input main_switch
     from: 'on'
     to: 'off'
   - platform: state
-    entity_id: !input main_switch
+    entity_id:
+      - !input main_switch
     from: 'off'
     to: 'on'
+
 condition: "{{ trigger.to_state.context.parent_id == none }}"
+
 action:
   - wait_template: "{{ (as_timestamp(now()) - as_timestamp(this.attributes.last_triggered | default(0)) | int > 3) }}"
-    timeout: 3
+    timeout: '00:00:03'
   - service: >
       {% if trigger.to_state.state == 'on' %}
       switch.turn_on
@@ -44,7 +48,8 @@ action:
       {% endif %}
     target:
       entity_id:
-        - !input switch1
-        - !input switch2
+        - "{{ switch1 }}"
+        - "{{ switch2 }}"
+
 mode: restart
 max_exceeded: silent
