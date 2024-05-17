@@ -1,0 +1,68 @@
+blueprint:
+  name: Sync 3 by Esper
+  description: Turn on a switch when other one is turend on and vice versa
+  domain: automation
+  input:
+    switch_entity1:
+      name: Switch 1
+      selector:
+        entity:
+          domain: switch
+    switch_entity2:
+      name: Switch 2
+      selector:
+        entity:
+          domain: switch
+    switch_entity3:
+      name: Switch 3
+      selector:
+        entity:
+          domain: switch
+variables:
+  switch_entity1: !input switch_entity1
+  switch_entity2: !input switch_entity2
+  switch_entity3: !input switch_entity3
+  switch_entity12: 
+    - !input switch_entity1
+    - !input switch_entity2
+  switch_entity13:
+    - !input switch_entity1
+    - !input switch_entity3
+  switch_entity23:
+    - !input switch_entity2
+    - !input switch_entity3
+
+trigger:
+  - platform: state
+    entity_id: 
+      - !input switch_entity1
+      - !input switch_entity2
+      - !input switch_entity3
+    from: 'on'
+    to: 'off'
+  - platform: state
+    entity_id: 
+      - !input switch_entity1
+      - !input switch_entity2
+      - !input switch_entity3
+    from: 'off'
+    to: 'on'
+condition: "{{ trigger.to_state.context.parent_id == none }}"
+action:
+  - wait_template: "{{ (as_timestamp(now()) - as_timestamp(this.attributes.last_triggered | default(0)) | int > 3) }}"
+    timeout: 3
+  - service_template: >
+      {% if trigger.to_state.state == 'on' %}
+      switch.turn_on
+      {% elif trigger.to_state.state == 'off' %}
+      switch.turn_off
+      {% endif %}
+    data_template: 
+      entity_id: >
+        {% if trigger.entity_id == switch_entity1 %}
+          {{ switch_entity23 }}
+        {% elif trigger.entity_id == switch_entity2 %}
+          {{ switch_entity13 }}
+        {% elif trigger.entity_id == switch_entity3 %}
+          {{ switch_entity12 }}
+        {% endif %}
