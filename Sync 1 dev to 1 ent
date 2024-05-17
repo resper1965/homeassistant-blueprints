@@ -1,0 +1,42 @@
+blueprint:
+  name: Sync switch with light by Esper
+  description: Turn on/off a light when a switch is turned on/off
+  domain: automation
+  input:
+    main_switch:
+      name: Main Switch
+      selector:
+        entity:
+          domain: switch
+    target_light:
+      name: Target Light
+      selector:
+        device:
+          integration: light
+
+trigger:
+  - platform: state
+    entity_id: !input main_switch
+    from: 'on'
+    to: 'off'
+  - platform: state
+    entity_id: !input main_switch
+    from: 'off'
+    to: 'on'
+
+condition: "{{ trigger.to_state.context.parent_id is none }}"
+
+action:
+  - wait_template: "{{ (as_timestamp(now()) - as_timestamp(states.automation.sync_switch_with_light_by_esper.attributes.last_triggered | default(0))) > 3 }}"
+    timeout: '00:00:03'
+  - service: >
+      {% if trigger.to_state.state == 'on' %}
+      light.turn_on
+      {% elif trigger.to_state.state == 'off' %}
+      light.turn_off
+      {% endif %}
+    target:
+      device_id: !input target_light
+
+mode: restart
+max_exceeded: silent
