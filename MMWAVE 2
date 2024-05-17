@@ -1,0 +1,64 @@
+blueprint:
+  name: Human Presence Detection with Switches
+  description: Turn on switches when presence is detected and turn off after no presence
+  domain: automation
+  input:
+    presence_sensor:
+      name: Presence Sensor
+      selector:
+        entity:
+          domain: binary_sensor
+          device_class: presence
+    switch1:
+      name: Switch 1
+      selector:
+        entity:
+          domain: switch
+    switch2:
+      name: Switch 2
+      selector:
+        entity:
+          domain: switch
+    delay_off:
+      name: Delay before turning off
+      description: Time to wait before turning off the switches after no presence is detected
+      default: '00:05:00'
+      selector:
+        time:
+
+trigger:
+  - platform: state
+    entity_id: !input presence_sensor
+    from: 'off'
+    to: 'on'
+  - platform: state
+    entity_id: !input presence_sensor
+    from: 'on'
+    to: 'off'
+    for: !input delay_off
+
+action:
+  - choose:
+      - conditions:
+          - condition: state
+            entity_id: !input presence_sensor
+            state: 'on'
+        sequence:
+          - service: switch.turn_on
+            target:
+              entity_id:
+                - !input switch1
+                - !input switch2
+      - conditions:
+          - condition: state
+            entity_id: !input presence_sensor
+            state: 'off'
+        sequence:
+          - service: switch.turn_off
+            target:
+              entity_id:
+                - !input switch1
+                - !input switch2
+
+mode: restart
+max_exceeded: silent
