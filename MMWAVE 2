@@ -1,64 +1,57 @@
 blueprint:
-  name: Human Presence Detection with Switches
-  description: Turn on switches when presence is detected and turn off after no presence
+  name: Ligar e desligar múltiplos switches com sensor mmWave e iluminação
+  description: Liga os switches quando o sensor mmWave detecta presença e a iluminação é inferior a 100 lux. Desliga os switches quando não há presença.
   domain: automation
   input:
-    presence_sensor:
-      name: Presence Sensor
+    sensor_presence:
+      name: Sensor mmWave de Presença
+      description: O sensor mmWave que detecta presença.
       selector:
         entity:
           domain: binary_sensor
-          device_class: presence
-    switch1:
-      name: Switch 1
+    sensor_illuminance:
+      name: Sensor de Iluminação
+      description: O sensor que mede o nível de iluminação em lux.
       selector:
         entity:
-          domain: switch
-    switch2:
-      name: Switch 2
+          domain: sensor
+    switches:
+      name: Switches
+      description: Os switches que serão controlados com base na presença e na iluminação.
       selector:
-        entity:
-          domain: switch
-    delay_off:
-      name: Delay before turning off
-      description: Time to wait before turning off the switches after no presence is detected
-      default: '00:05:00'
-      selector:
-        time:
+        target:
+          entity:
+            domain: switch
 
 trigger:
   - platform: state
-    entity_id: !input presence_sensor
-    from: 'off'
+    entity_id: !input sensor_presence
     to: 'on'
   - platform: state
-    entity_id: !input presence_sensor
-    from: 'on'
+    entity_id: !input sensor_presence
     to: 'off'
-    for: !input delay_off
+
+condition:
+  - condition: template
+    value_template: "{{ states('!input sensor_illuminance') | int < 100 }}"
 
 action:
   - choose:
       - conditions:
           - condition: state
-            entity_id: !input presence_sensor
+            entity_id: !input sensor_presence
             state: 'on'
+          - condition: template
+            value_template: "{{ states('!input sensor_illuminance') | int < 100 }}"
         sequence:
           - service: switch.turn_on
             target:
-              entity_id:
-                - !input switch1
-                - !input switch2
+              entity_id: !input switches
       - conditions:
           - condition: state
-            entity_id: !input presence_sensor
+            entity_id: !input sensor_presence
             state: 'off'
         sequence:
           - service: switch.turn_off
             target:
-              entity_id:
-                - !input switch1
-                - !input switch2
-
-mode: restart
-max_exceeded: silent
+              entity_id: !input switches
