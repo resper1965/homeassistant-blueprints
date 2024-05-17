@@ -23,5 +23,4 @@ action:
       entity_id: >
         {% set trigger_entity = trigger.entity_id %}
         {% set entities = expand(switches) | map(attribute='entity_id') | list %}
-        {{ entities | reject('equalto', trigger_entity) | list }}
-
+        {{ entities | reject('equalto', trigger_entity) | join(', ') }}
