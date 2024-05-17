@@ -5,22 +5,28 @@ blueprint:
   input:
     switches:
       name: Dispositivos
-      description: Lista de dispositivos para sincronizar
+      description: Lista de dispositivos para sincronizar (de 2 a 5 dispositivos)
       selector:
         target:
           entity:
             domain: switch
-mode: restart
-max_exceeded: silent
+            multiple: true
+            limit: 5
 trigger:
   - platform: state
     entity_id: !input 'switches'
 variables:
   switches: !input 'switches'
+  switches_count: "{{ switches | count }}"
+condition:
+  - condition: template
+    value_template: "{{ switches_count >= 2 and switches_count <= 5 }}"
 action:
   - service: "homeassistant.turn_{{ trigger.to_state.state }}"
     target:
       entity_id: >
         {% set trigger_entity = trigger.entity_id %}
         {% set entities = expand(switches) | map(attribute='entity_id') | list %}
-        {{ entities | reject('equalto', trigger_entity) | join(', ') }}
+        {{ entities | reject('equalto', trigger_entity) | join(',') }}
+mode: restart
+max_exceeded: silent
