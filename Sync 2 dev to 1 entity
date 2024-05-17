@@ -1,6 +1,6 @@
 blueprint:
   name: Sync 1 ent with 2 devices by Esper
-  description: Turn on/off two switches when another switch is turned on/off
+  description: Turn on/off two lights when a switch is turned on/off
   domain: automation
   input:
     main_switch:
@@ -8,20 +8,20 @@ blueprint:
       selector:
         entity:
           domain: switch
-    switch1:
-      name: Switch 1
+    light1:
+      name: Light 1
       selector:
         entity:
-          domain: switch
-    switch2:
-      name: Switch 2
+          domain: light
+    light2:
+      name: Light 2
       selector:
         entity:
-          domain: switch
+          domain: light
 variables:
   main_switch: !input main_switch
-  switch1: !input switch1
-  switch2: !input switch2
+  light1: !input light1
+  light2: !input light2
 
 trigger:
   - platform: state
@@ -42,14 +42,14 @@ action:
     timeout: '00:00:03'
   - service: >
       {% if trigger.to_state.state == 'on' %}
-      switch.turn_on
+      light.turn_on
       {% elif trigger.to_state.state == 'off' %}
-      switch.turn_off
+      light.turn_off
       {% endif %}
     target:
       entity_id:
-        - "{{ switch1 }}"
-        - "{{ switch2 }}"
+        - "{{ light1 }}"
+        - "{{ light2 }}"
 
 mode: restart
 max_exceeded: silent
